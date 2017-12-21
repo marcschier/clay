@@ -46,11 +46,11 @@ namespace ClaySharp.Tests {
 
             var ex1 = Assert.Throws<RuntimeBinderException>(() => alpha.Hello1());
 
-            Assert.That(ex1.Message, Is.StringEnding("does not contain a definition for 'Hello1'"));
+            Assert.That(ex1.Message, Does.EndWith("does not contain a definition for 'Hello1'"));
 
             var ex2 = Assert.Throws<RuntimeBinderException>(() => beta.Hello2());
 
-            Assert.That(ex2.Message, Is.StringEnding("does not contain a definition for 'Hello2'"));
+            Assert.That(ex2.Message, Does.EndWith("does not contain a definition for 'Hello2'"));
 
             Assert.That(beta.Sample(), Is.EqualTo("Data"));
 
@@ -64,11 +64,11 @@ namespace ClaySharp.Tests {
 
             var ex1 = Assert.Throws<RuntimeBinderException>(() => { var hi = alpha.Hello1; });
 
-            Assert.That(ex1.Message, Is.StringEnding("does not contain a definition for 'Hello1'"));
+            Assert.That(ex1.Message, Does.EndWith("does not contain a definition for 'Hello1'"));
 
             var ex2 = Assert.Throws<RuntimeBinderException>(() => { var hi = beta.Hello2; });
 
-            Assert.That(ex2.Message, Is.StringEnding("does not contain a definition for 'Hello2'"));
+            Assert.That(ex2.Message, Does.EndWith("does not contain a definition for 'Hello2'"));
 
             Assert.That(beta.Sample, Is.EqualTo("Data"));
         }
@@ -80,11 +80,11 @@ namespace ClaySharp.Tests {
 
             var ex1 = Assert.Throws<RuntimeBinderException>(() => { alpha.Hello1 = 1; });
 
-            Assert.That(ex1.Message, Is.StringEnding("does not contain a definition for 'Hello1'"));
+            Assert.That(ex1.Message, Does.EndWith("does not contain a definition for 'Hello1'"));
 
             var ex2 = Assert.Throws<RuntimeBinderException>(() => { beta.Hello2 = 2; });
 
-            Assert.That(ex2.Message, Is.StringEnding("does not contain a definition for 'Hello2'"));
+            Assert.That(ex2.Message, Does.EndWith("does not contain a definition for 'Hello2'"));
 
             var x = (beta.Sample = 3);
             Assert.That(x, Is.EqualTo("Data"));
@@ -97,10 +97,10 @@ namespace ClaySharp.Tests {
             dynamic beta = new Clay(new TestMemberBehavior());
 
             var ex1 = Assert.Throws<RuntimeBinderException>(() => { var hi = alpha[0]; });
-            Assert.That(ex1.Message, Is.StringMatching(@"Cannot apply indexing with \[\] to an expression of type .*"));
+            Assert.That(ex1.Message, Does.Match(@"Cannot apply indexing with \[\] to an expression of type .*"));
 
             var ex2 = Assert.Throws<RuntimeBinderException>(() => { var hi = beta[0]; });
-            Assert.That(ex2.Message, Is.StringMatching(@"Cannot apply indexing with \[\] to an expression of type .*"));
+            Assert.That(ex2.Message, Does.Match(@"Cannot apply indexing with \[\] to an expression of type .*"));
         }
 
 
@@ -111,11 +111,11 @@ namespace ClaySharp.Tests {
 
             var ex1 = Assert.Throws<RuntimeBinderException>(() => { alpha[0] = 1; });
 
-            Assert.That(ex1.Message, Is.StringMatching(@"Cannot apply indexing with \[\] to an expression of type .*"));
+            Assert.That(ex1.Message, Does.Match(@"Cannot apply indexing with \[\] to an expression of type .*"));
 
             var ex2 = Assert.Throws<RuntimeBinderException>(() => { beta[0] = 2; });
 
-            Assert.That(ex2.Message, Is.StringMatching(@"Cannot apply indexing with \[\] to an expression of type .*"));
+            Assert.That(ex2.Message, Does.Match(@"Cannot apply indexing with \[\] to an expression of type .*"));
 
         }
 

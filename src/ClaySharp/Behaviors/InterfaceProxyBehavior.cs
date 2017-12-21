@@ -5,7 +5,6 @@ using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using Castle.Core.Interceptor;
 using Castle.DynamicProxy;
 using Microsoft.CSharp.RuntimeBinder;
 using Binder = Microsoft.CSharp.RuntimeBinder.Binder;
@@ -51,7 +50,7 @@ namespace ClaySharp.Behaviors {
                 }
 
                 var invoker = BindInvoker(invocation);
-                invoker(invocation);
+                invoker(invocation, invocation.InvocationTarget ?? Self);
 
                 if (invocation.ReturnValue != null &&
                     !invocation.Method.ReturnType.IsAssignableFrom(invocation.ReturnValue.GetType()) &&
@@ -71,16 +70,17 @@ namespace ClaySharp.Behaviors {
             }
 
 
-            static readonly ConcurrentDictionary<MethodInfo, Action<IInvocation>> Invokers = new ConcurrentDictionary<MethodInfo, Action<IInvocation>>();
+            static readonly ConcurrentDictionary<MethodInfo, Action<IInvocation, object>> Invokers = new ConcurrentDictionary<MethodInfo, Action<IInvocation, object>>();
 
-            private static Action<IInvocation> BindInvoker(IInvocation invocation) {
+            private static Action<IInvocation, object> BindInvoker(IInvocation invocation) {
                 return Invokers.GetOrAdd(invocation.Method, CompileInvoker);
             }
 
-            private static Action<IInvocation> CompileInvoker(MethodInfo method) {
+            private static Action<IInvocation, object> CompileInvoker(MethodInfo method) {
 
                 var methodParameters = method.GetParameters();
                 var invocationParameter = Expression.Parameter(typeof(IInvocation), "invocation");
+                var targetParameter = Expression.Parameter(typeof(object), "target");
 
                 var targetAndArgumentInfos = Pack(
                     CSharpArgumentInfo.Create(CSharpArgumentInfoFlags.None, null),
@@ -88,7 +88,9 @@ namespace ClaySharp.Behaviors {
                                         mp => CSharpArgumentInfo.Create(CSharpArgumentInfoFlags.NamedArgument, mp.Name)));
 
                 var targetAndArguments = Pack<Expression>(
-                    Expression.Property(invocationParameter, invocationParameter.Type, "InvocationTarget"),
+                    targetParameter, 
+                    // was: Expression.Property(invocationParameter, invocationParameter.Type, "InvocationTarget"), 
+                    //      however, later dynproxy emits an is and sets target to null if it is not, which it is not.
                     methodParameters.Select(
                         (mp, index) =>
                             Expression.Convert(
@@ -125,10 +127,10 @@ namespace ClaySharp.Behaviors {
                             targetAndArguments);
                     }
 
-                    if (body == null && method.Name.StartsWith("get_")) {
+                    if (body == null && method.Name.StartsWith("get_", StringComparison.Ordinal)) {
                         //  Build lambda containing the following call site:
                         //  (IInvocation invocation) => {
-                        //      invocation.ReturnValue = (object) ((dynamic)invocation.InvocationTarget).{method.Name};
+                        //      invocation.ReturnValue = (object) ((dynamic)targetParameter).{method.Name};
                         //  }
                         body = Expression.Dynamic(
                             Binder.GetMember(
@@ -140,7 +142,7 @@ namespace ClaySharp.Behaviors {
                             targetAndArguments);
                     }
 
-                    if (body == null && method.Name.StartsWith("set_")) {
+                    if (body == null && method.Name.StartsWith("set_", StringComparison.Ordinal)) {
                         body = Expression.Dynamic(
                             Binder.SetMember(
                                 CSharpBinderFlags.InvokeSpecialName,
@@ -154,7 +156,7 @@ namespace ClaySharp.Behaviors {
                 if (body == null) {
                     //  Build lambda containing the following call site:
                     //  (IInvocation invocation) => {
-                    //      invocation.ReturnValue = (object) ((dynamic)invocation.InvocationTarget).{method.Name}(
+                    //      invocation.ReturnValue = (object) ((dynamic)targetParameter).{method.Name}(
                     //          {methodParameters[*].Name}: ({methodParameters[*].Type})invocation.Arguments[*],
                     //          ...);
                     //  }
@@ -177,7 +179,7 @@ namespace ClaySharp.Behaviors {
                         Expression.Convert(body, typeof(object)));
                 }
 
-                var lambda = Expression.Lambda<Action<IInvocation>>(body, invocationParameter);
+                var lambda = Expression.Lambda<Action<IInvocation, object>>(body, invocationParameter, targetParameter);
                 return lambda.Compile();
             }
 

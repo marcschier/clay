@@ -2,7 +2,7 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using Castle.Core.Interceptor;
+using Castle.DynamicProxy;
 using ClaySharp.Implementation;
 using Microsoft.CSharp.RuntimeBinder;
 
