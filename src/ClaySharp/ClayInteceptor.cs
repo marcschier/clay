@@ -23,7 +23,7 @@ namespace ClaySharp {
             if (behaviorProvider != null) {
                 var invocationMethod = invocation.Method;
                 if (invocationMethod.IsSpecialName &&
-                    invocationMethod.Name.StartsWith(GetPrefix)) {
+                    invocationMethod.Name.StartsWith(GetPrefix, StringComparison.Ordinal)) {
                     invocation.ReturnValue = behaviorProvider.Behavior.GetMember(
                         () => {
                             invocation.Proceed();
@@ -35,7 +35,7 @@ namespace ClaySharp {
                     return;
                 }
                 if (invocationMethod.IsSpecialName &&
-                    invocationMethod.Name.StartsWith(SetPrefix) &&
+                    invocationMethod.Name.StartsWith(SetPrefix, StringComparison.Ordinal) &&
                     invocation.Arguments.Count() == 1) {
                     invocation.ReturnValue = behaviorProvider.Behavior.SetMember(
                         () => {

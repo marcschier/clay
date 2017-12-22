@@ -20,10 +20,10 @@ namespace ClaySharp.Implementation {
 
             public NamedEnumerable(IEnumerable<T> arguments, IEnumerable<string> names) {
                 if (arguments == null) {
-                    throw new ArgumentNullException("arguments");
+                    throw new ArgumentNullException(nameof(arguments));
                 }
                 if (names == null) {
-                    throw new ArgumentNullException("names");
+                    throw new ArgumentNullException(nameof(names));
                 }
                 if (arguments.Count() < names.Count()) {
                     throw new ArgumentException("arguments.Count() < names.Count()");

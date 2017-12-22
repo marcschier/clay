@@ -31,7 +31,7 @@ namespace ClaySharp.Behaviors {
 
 
 
-        private static Action<dynamic, object> GetAssigner(Type sourceType) {
+        protected static Action<dynamic, object> GetAssigner(Type sourceType) {
             lock (_assignerCache) {
                 Action<dynamic, object> assigner;
                 if (_assignerCache.TryGetValue(sourceType, out assigner))
